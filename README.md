@@ -1,6 +1,8 @@
 # Motus Solver
 
-A solver for the word game Motus, in **French** and **English**. It's a static web app: open `index.html` (double-click works, no server needed), nothing to install, works offline.
+A solver for the word game Motus, in **French** and **English**.
+
+**Use it online: https://indianarex.github.io/motus-solver/**, or download the repository and open `index.html` (double-click works, no server needed). Nothing to install, works offline.
 
 ## Usage
 
@@ -38,6 +40,12 @@ The best guess is sometimes a **probe word**: a valid word that cannot be the an
 - `tools/build-words.mjs`: regenerates `data/` from the raw word lists (see the header of the file).
 - `tools/benchmark.js`: the simulation above.
 
-## Credits
+Found a security issue? See [SECURITY.md](SECURITY.md).
 
-Word lists: [an-array-of-french-words](https://www.npmjs.com/package/an-array-of-french-words), [an-array-of-english-words](https://www.npmjs.com/package/an-array-of-english-words); frequencies from [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords). Fonts: Archivo Black and Inter, SIL Open Font License 1.1 (`fonts/`).
+## License
+
+- **Code**: [PolyForm Noncommercial 1.0.0](LICENSE.md). Free to use, modify and share for any noncommercial purpose (personal use, study, research, hobby projects, non-profits…). **Commercial use requires a separate license**: ask in [Discussions](https://github.com/Indianarex/motus-solver/discussions).
+- **Word lists** (`data/`): [CC BY-SA 4.0](data/LICENSE.md), adapted from [an-array-of-french-words](https://github.com/words/an-array-of-french-words) and [an-array-of-english-words](https://github.com/words/an-array-of-english-words) (MIT) and [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0).
+- **Fonts** (`fonts/`): Archivo Black and Inter, [SIL Open Font License 1.1](fonts/).
+
+Motus is a trademark of its respective owners; this project is an unofficial fan-made tool and is not affiliated with or endorsed by them.
