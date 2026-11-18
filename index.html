@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solveur Motus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1><span class="logo-sq">S</span>olveur <em>Motus</em></h1>
+    <div class="lang" role="group" aria-label="Langue">
+      <button data-lang="fr" class="on">FR</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="board-col">
+      <div class="settings">
+        <label><span data-i18n="length">Longueur</span>
+          <select id="len"></select>
+        </label>
+        <label><span data-i18n="first">1re lettre</span>
+          <input id="first" maxlength="1" autocomplete="off" placeholder="?">
+        </label>
+        <button id="reset" class="ghost" data-i18n="reset">Nouvelle partie</button>
+      </div>
+
+      <p class="help" data-i18n="help">Tapez votre essai, puis cliquez sur chaque lettre pour indiquer sa couleur&nbsp;: bleu = absente, jaune = mal placée, rouge = bien placée. Entrée pour ajouter une ligne.</p>
+
+      <div id="board" class="board" tabindex="0" aria-label="Grille"></div>
+      <p id="warn" class="warn" hidden></p>
+
+      <div id="kbd" class="kbd" aria-label="Clavier"></div>
+    </section>
+
+    <aside class="side">
+      <div class="card best">
+        <h2 data-i18n="best">Meilleure proposition</h2>
+        <div id="bestWord" class="best-word">…</div>
+        <div id="bestMeta" class="meta"></div>
+        <button id="useBest" class="primary" data-i18n="use">Jouer ce mot</button>
+        <div id="alts" class="alts"></div>
+      </div>
+
+      <div class="card">
+        <div class="cands-head">
+          <h2><span id="count">0</span> <span data-i18n="possible">mots possibles</span></h2>
+          <label class="toggle"><input type="checkbox" id="rare"> <span data-i18n="rare">mots rares</span></label>
+        </div>
+        <div id="cands" class="cands"></div>
+        <button id="more" class="ghost" hidden data-i18n="more">Afficher plus</button>
+      </div>
+    </aside>
+  </main>
+
+  <div id="loading" class="loading" data-i18n="loading">Chargement du dictionnaire…</div>
+
+  <script src="solver.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
