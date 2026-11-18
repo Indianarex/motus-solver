@@ -1,3 +1,13 @@
+/* Self-hosted fonts (SIL OFL 1.1, see fonts/): no request to a third party. */
+@font-face {
+  font-family: 'Archivo Black'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/archivo-black-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url(fonts/inter-latin.woff2) format('woff2');
+}
+
 :root {
   --bg: #0a1a3f;
   --bg2: #0f2457;

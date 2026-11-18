@@ -12,6 +12,7 @@
       best: 'Meilleure proposition', use: 'Jouer ce mot', possible: 'mots possibles', rare: 'mots rares',
       more: 'Afficher plus', loading: 'Chargement du dictionnaire…', letters: 'lettres',
       bits: 'bits d’information', chance: 'de chances d’être la solution',
+      probe: 'mot éclaireur : ne peut pas être la solution, mais élimine le plus de mots',
       only: 'C’est forcément ce mot !', none: 'Aucun mot ne correspond. Vérifiez les couleurs saisies.',
       noneRare: 'Aucun mot courant ne correspond — cochez « mots rares » pour élargir la recherche.',
       fallback: 'Aucun mot courant : affichage des mots rares.',
@@ -25,6 +26,7 @@
       best: 'Best guess', use: 'Play this word', possible: 'possible words', rare: 'rare words',
       more: 'Show more', loading: 'Loading dictionary…', letters: 'letters',
       bits: 'bits of information', chance: 'chance of being the answer',
+      probe: 'probe word: cannot be the answer, but rules out the most words',
       only: 'It has to be this word!', none: 'No word matches. Check the colours you entered.',
       noneRare: 'No common word matches — tick “rare words” to widen the search.',
       fallback: 'No common word left: showing rare words.',
@@ -49,11 +51,30 @@
   function save() {
     try { localStorage.setItem('motus-solver', JSON.stringify(st)); } catch (e) { /* ignore */ }
   }
+  /**
+   * Restores the saved game. Storage is untrusted (under file:// every local page
+   * shares it), so every field is validated and rebuilt instead of copied as is.
+   */
   function restore() {
-    try {
-      const s = JSON.parse(localStorage.getItem('motus-solver'));
-      if (s && s.rows && s.len >= MIN_LEN && s.len <= MAX_LEN) st = Object.assign(st, s);
-    } catch (e) { /* ignore */ }
+    let s;
+    try { s = JSON.parse(localStorage.getItem('motus-solver')); } catch (e) { return; }
+    if (!s || typeof s !== 'object') return;
+    if (!Object.prototype.hasOwnProperty.call(T, s.lang)) return;
+    const len = s.len;
+    if (!Number.isInteger(len) || len < MIN_LEN || len > MAX_LEN) return;
+    const first = typeof s.first === 'string' && /^[A-Z]?$/.test(s.first) ? s.first : '';
+    if (!Array.isArray(s.rows) || !s.rows.length || s.rows.length > 30) return;
+    const rows = [];
+    for (const r of s.rows) {
+      if (!r || !Array.isArray(r.letters) || !Array.isArray(r.marks)) return;
+      if (r.letters.length !== len || r.marks.length !== len) return;
+      if (!r.letters.every((l) => l === '' || (typeof l === 'string' && /^[A-Z]$/.test(l)))) return;
+      if (!r.marks.every((m) => m === 0 || m === 1 || m === 2)) return;
+      rows.push({ letters: r.letters.slice(), marks: r.marks.slice(), done: r.done === true });
+    }
+    const cr = s.cur && Number.isInteger(s.cur.r) && s.cur.r >= 0 && s.cur.r < rows.length ? s.cur.r : rows.length - 1;
+    const cc = s.cur && Number.isInteger(s.cur.c) && s.cur.c >= 0 && s.cur.c <= len ? s.cur.c : len;
+    st = { lang: s.lang, len, first, rare: s.rare === true, rows, cur: { r: cr, c: cc } };
   }
 
   const t = (k) => T[st.lang][k];
@@ -83,6 +104,8 @@
   /* ---------- dictionaries ---------- */
   function loadLang(lang) {
     if (dicts[lang]) return Promise.resolve();
+    // the language is part of a script URL: only known values may reach it
+    if (!Object.prototype.hasOwnProperty.call(T, lang)) return Promise.reject(new Error('unknown language'));
     $('loading').classList.add('on');
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -134,7 +157,9 @@
         if (!l) tile.classList.add('empty');
         else tile.classList.add('m' + row.marks[c]);
         if (st.cur.r === r && st.cur.c === c) tile.classList.add('cursor');
-        tile.innerHTML = `<span>${l}</span>`;
+        const span = document.createElement('span');
+        span.textContent = l;
+        tile.appendChild(span);
         tile.addEventListener('click', () => onTile(r, c));
         el.appendChild(tile);
       });
@@ -191,16 +216,9 @@
     if (!cons.ok) warn.push(t('conflict')(cons.pos + 1, cons.a, cons.b));
 
     const first = st.first || '';
-    let common = [], rare = [];
-    const cc = d.common;
-    for (let i = 0; i < d.words.length; i++) {
-      const w = d.words[i];
-      if (!S.matches(w, rows, first)) continue;
-      if (i < cc) common.push({ w, weight: 0.25 + 0.75 * (1 - i / cc), common: true });
-      else rare.push({ w, weight: 0.04, common: false });
-    }
-    let cands = st.rare ? common.concat(rare) : common;
-    if (!cands.length && rare.length) { cands = rare; warn.push(t('fallback')); }
+    const res = solve(d, rows, first);
+    const { common, rare, cands } = res;
+    if (res.fallback) warn.push(t('fallback'));
 
     $('count').textContent = cands.length.toLocaleString(st.lang);
     const last = st.rows[st.rows.length - 1];
@@ -214,17 +232,52 @@
     } else if (cands.length === 1) {
       showBest(cands[0].w, t('only'), []);
     } else {
-      const ranked = S.rankGuesses(cands);
+      const ranked = res.ranked();
       const b = ranked[0];
       const pct = b.p * 100;
-      showBest(b.w, `${b.entropy.toFixed(2)} ${t('bits')} · ${pct < 1 ? pct.toFixed(1) : Math.round(pct)}% ${t('chance')}`,
-        ranked.slice(1, 9).map((x) => x.w));
+      const meta = b.p === 0
+        ? `${b.entropy.toFixed(2)} ${t('bits')} · ${t('probe')}`
+        : `${b.entropy.toFixed(2)} ${t('bits')} · ${pct < 1 ? pct.toFixed(1) : Math.round(pct)}% ${t('chance')}`;
+      showBest(b.w, meta, ranked.slice(1, 9).map((x) => x.w));
     }
 
     renderCands(cands);
     const wEl = $('warn');
     wEl.hidden = !warn.length;
     wEl.textContent = warn.join(' ');
+  }
+
+  /**
+   * Filters and ranks, memoised on the inputs that matter (typing in an
+   * unconfirmed row or re-rendering does not trigger a new computation).
+   */
+  let memo = { key: null };
+  function solve(d, rows, first) {
+    const key = JSON.stringify([st.lang, st.len, first, st.rare, rows]);
+    if (memo.key === key) return memo.res;
+    if (!d.index) d.index = new Map(d.words.map((w, i) => [w, i]));
+    const cc = d.common;
+    const common = [], rare = [];
+    for (const w of S.filterWords(d.words, rows, first)) {
+      const i = d.index.get(w);
+      if (i < cc) common.push({ w, weight: 0.25 + 0.75 * (1 - i / cc), common: true });
+      else rare.push({ w, weight: 0.04, common: false });
+    }
+    let cands = st.rare ? common.concat(rare) : common;
+    const fallback = !cands.length && rare.length > 0;
+    if (fallback) cands = rare;
+    // probe words: any dictionary word that respects the first letter
+    const reds0 = rows.find((r) => r.marks[0] === 2);
+    const lead = first || (reds0 ? reds0.word[0] : '');
+    let ranked = null;
+    const res = {
+      common, rare, cands, fallback,
+      ranked: () => ranked || (ranked = S.rankGuesses(cands, {
+        extraGuesses: lead ? d.words.filter((w) => w[0] === lead) : d.words,
+      })),
+    };
+    memo = { key, res };
+    return res;
   }
 
   function showBest(word, meta, alts) {
