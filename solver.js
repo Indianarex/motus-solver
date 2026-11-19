@@ -77,6 +77,46 @@
     return out;
   }
 
+  /**
+   * What the guesses say about the answer, independently of any dictionary.
+   * @returns {fixed: (letter|'')[], allowed: string[] (letters still possible per position),
+   *           toPlace: {letter: count} (present letters not yet located)}
+   */
+  function constraints(rows, len, firstLetter) {
+    const fixed = Array(len).fill('');
+    const banned = Array.from({ length: len }, () => new Set());
+    const minCount = {}, maxCount = {};
+    if (firstLetter) fixed[0] = firstLetter;
+    for (const r of rows) {
+      const seen = {}, grey = {};
+      for (let i = 0; i < len; i++) {
+        const c = r.word[i];
+        if (r.marks[i] === 2) fixed[i] = c;
+        else banned[i].add(c); // yellow or blue: not at this position
+        if (r.marks[i] > 0) seen[c] = (seen[c] || 0) + 1;
+        else grey[c] = true;
+      }
+      for (const c in seen) minCount[c] = Math.max(minCount[c] || 0, seen[c]);
+      for (const c in grey) maxCount[c] = Math.min(maxCount[c] ?? Infinity, seen[c] || 0);
+    }
+    const fixedCount = {};
+    fixed.forEach((c) => { if (c) fixedCount[c] = (fixedCount[c] || 0) + 1; });
+    const toPlace = {};
+    for (const c in minCount) if (minCount[c] > (fixedCount[c] || 0)) toPlace[c] = minCount[c] - (fixedCount[c] || 0);
+    const allowed = fixed.map((f, i) => {
+      if (f) return f;
+      let s = '';
+      for (let k = 65; k <= 90; k++) {
+        const c = String.fromCharCode(k);
+        if (banned[i].has(c)) continue;
+        if (maxCount[c] !== undefined && (fixedCount[c] || 0) >= maxCount[c]) continue; // no copy left
+        s += c;
+      }
+      return s;
+    });
+    return { fixed, allowed, toPlace };
+  }
+
   /** Checks that a set of guesses is not self-contradictory (detects input mistakes). */
   function checkConsistency(rows) {
     const known = {};
@@ -190,7 +230,7 @@
     return out;
   }
 
-  const api = { feedback, feedbackCode, marksToCode, matches, filterWords, checkConsistency, rankGuesses };
+  const api = { feedback, feedbackCode, marksToCode, matches, filterWords, constraints, checkConsistency, rankGuesses };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MotusSolver = api;
 })(typeof window !== 'undefined' ? window : globalThis);

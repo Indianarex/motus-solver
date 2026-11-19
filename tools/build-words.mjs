@@ -9,6 +9,10 @@
 //                               (http://wordlist.aspell.net/)
 //   fr_full.txt, en_full.txt    "word count" lines from hermitdave/FrequencyWords
 //                               (content/2018/<lang>/<lang>_full.txt)
+//   fr_wikt.txt, en_wikt.txt    Wiktionary word lists made with tools/extract-wiktionary.mjs
+//
+// Output order per length: common words (by frequency), then other words of the main
+// dictionaries, then words only found in Wiktionary (both alphabetically).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,18 +88,21 @@ const sources = {
 
 for (const lang of ['fr', 'en']) {
   const { words, freq } = sources[lang]();
+  const wikt = new Set();
+  addAll(wikt, fs.readFileSync(raw(`${lang}_wikt.txt`), 'utf8').split(/\r?\n/));
   const out = {};
-  let total = 0, totalCommon = 0;
+  let total = 0, totalCommon = 0, totalKnown = 0;
   for (let len = MIN; len <= MAX; len++) {
-    const list = [...words].filter((w) => w.length === len);
+    const list = [...new Set([...words, ...wikt])].filter((w) => w.length === len);
     const isCommon = (w) => (freq.get(w) || 0) >= COMMON_PER_MILLION;
     const common = list.filter(isCommon).sort((a, b) => freq.get(b) - freq.get(a));
-    const rare = list.filter((w) => !isCommon(w)).sort();
-    out[len] = { common: common.length, words: [...common, ...rare].join('') };
-    total += list.length; totalCommon += common.length;
+    const rare = list.filter((w) => !isCommon(w) && words.has(w)).sort();
+    const wiktOnly = list.filter((w) => !isCommon(w) && !words.has(w)).sort();
+    out[len] = { common: common.length, known: common.length + rare.length, words: [...common, ...rare, ...wiktOnly].join('') };
+    total += list.length; totalCommon += common.length; totalKnown += common.length + rare.length;
   }
   const js = `// Auto-generated — ${total} words. Words sorted by frequency ("common" ones first), concatenated without separator.\n` +
     `window.MOTUS_DATA = window.MOTUS_DATA || {};\nwindow.MOTUS_DATA.${lang} = ${JSON.stringify(out)};\n`;
   fs.writeFileSync(path.join(outDir, `words-${lang}.js`), js);
-  console.log(lang, total, 'words,', totalCommon, 'common,', (js.length / 1e6).toFixed(2), 'MB');
+  console.log(lang, total, 'words,', totalCommon, 'common,', totalKnown - totalCommon, 'rare,', total - totalKnown, 'Wiktionary only,', (js.length / 1e6).toFixed(2), 'MB');
 }

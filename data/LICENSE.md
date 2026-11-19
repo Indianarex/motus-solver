@@ -16,6 +16,10 @@ They are an adaptation of the following works, generated with `tools/build-words
 - **SCOWL** (Spell Checker Oriented Word Lists) 2020.12.07 by Kevin Atkinson, sizes up to 80,
   English/American/British/Canadian words without proper nouns (notice below).
   http://wordlist.aspell.net/
+- **Wiktionary** (French Wiktionary for French, English Wiktionary for English), by the
+  Wiktionary contributors, licensed under CC BY-SA 4.0. https://fr.wiktionary.org —
+  https://en.wiktionary.org — extracted with wiktextract (Tatu Ylonen) and downloaded from
+  https://kaikki.org, then reduced to plain word forms with `tools/extract-wiktionary.mjs`.
 - **FrequencyWords** by Hermit Dave, content licensed under CC BY-SA 4.0, built from
   the OpenSubtitles 2018 corpus (http://opus.nlpl.eu/OpenSubtitles2018.php).
   https://github.com/hermitdave/FrequencyWords
@@ -24,8 +28,10 @@ They are an adaptation of the following works, generated with `tools/build-words
 
 - Words normalised to upper case A–Z (accents removed, Œ → OE, Æ → AE); words containing
   other characters dropped; only 4 to 12 letter words kept.
-- Word lists merged (French: an-array-of-french-words + Lexique; English:
-  an-array-of-english-words + SCOWL).
+- Word lists merged (French: an-array-of-french-words + Lexique + French Wiktionary; English:
+  an-array-of-english-words + SCOWL + English Wiktionary). From Wiktionary only headwords and
+  inflected forms written in lower case are kept (no proper nouns, abbreviations or affixes).
+- Words found only in Wiktionary are placed after the other rare words.
 - Words grouped by length and sorted by frequency (FrequencyWords `content/2018/{fr,en}/*_full.txt`,
   plus Lexique film/book frequencies for French). Words used at least ~0.03 times per million are
   marked as common; the others are appended alphabetically. Frequencies themselves are not included.

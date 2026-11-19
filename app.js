@@ -13,7 +13,9 @@
       more: 'Afficher plus', loading: 'Chargement du dictionnaire…', letters: 'lettres',
       bits: 'bits d’information', chance: 'de chances d’être la solution',
       probe: 'mot éclaireur : ne peut pas être la solution, mais élimine le plus de mots',
-      only: 'C’est forcément ce mot !', none: 'Aucun mot ne correspond. Vérifiez les couleurs saisies.',
+      noDict: 'Mot absent du dictionnaire : voici ce que l’on sait de la solution.',
+      toPlace: 'Lettres présentes à placer :',
+      only: 'C’est forcément ce mot !', none: 'Aucun mot du dictionnaire ne correspond (si le mot est courant, vérifiez les couleurs saisies).',
       noneRare: 'Aucun mot courant ne correspond — cochez « mots rares » pour élargir la recherche.',
       fallback: 'Aucun mot courant : affichage des mots rares.',
       conflict: (p, a, b) => `Incohérence : position ${p} marquée rouge avec « ${a} » puis « ${b} ».`,
@@ -27,7 +29,9 @@
       more: 'Show more', loading: 'Loading dictionary…', letters: 'letters',
       bits: 'bits of information', chance: 'chance of being the answer',
       probe: 'probe word: cannot be the answer, but rules out the most words',
-      only: 'It has to be this word!', none: 'No word matches. Check the colours you entered.',
+      noDict: 'Word not in the dictionary: here is what we know about the answer.',
+      toPlace: 'Letters present, still to place:',
+      only: 'It has to be this word!', none: 'No dictionary word matches (if the word is common, check the colours you entered).',
       noneRare: 'No common word matches — tick “rare words” to widen the search.',
       fallback: 'No common word left: showing rare words.',
       conflict: (p, a, b) => `Conflict: position ${p} marked red with “${a}” and then “${b}”.`,
@@ -116,7 +120,8 @@
         for (const len in raw) {
           const str = raw[len].words, words = [];
           for (let i = 0; i < str.length; i += +len) words.push(str.substr(i, +len));
-          dicts[lang][len] = { words, common: raw[len].common };
+          // known: end of the main-dictionary words; beyond it, Wiktionary-only words
+          dicts[lang][len] = { words, common: raw[len].common, known: raw[len].known ?? words.length };
         }
         delete window.MOTUS_DATA[lang];
         $('loading').classList.remove('on');
@@ -227,8 +232,9 @@
     if (solved) {
       showBest(rows[rows.length - 1].word, t('solved'), []);
     } else if (!cands.length) {
-      warn.push(!st.rare && rare.length === 0 && common.length === 0 ? t('none') : t('noneRare'));
-      showBest('—', '', []);
+      // no dictionary word fits: still show what the guesses tell about the answer
+      if (common.length === 0 && rare.length === 0) warn.push(t('none'));
+      showPattern(S.constraints(rows, st.len, first));
     } else if (cands.length === 1) {
       showBest(cands[0].w, t('only'), []);
     } else {
@@ -261,23 +267,49 @@
     for (const w of S.filterWords(d.words, rows, first)) {
       const i = d.index.get(w);
       if (i < cc) common.push({ w, weight: 0.25 + 0.75 * (1 - i / cc), common: true });
-      else rare.push({ w, weight: 0.04, common: false });
+      else rare.push({ w, weight: i < d.known ? 0.04 : 0.01, common: false });
     }
     let cands = st.rare ? common.concat(rare) : common;
     const fallback = !cands.length && rare.length > 0;
     if (fallback) cands = rare;
-    // probe words: any dictionary word that respects the first letter
+    // probe words: common words that respect the first letter (obscure words would look odd)
     const reds0 = rows.find((r) => r.marks[0] === 2);
     const lead = first || (reds0 ? reds0.word[0] : '');
+    const pool = d.words.slice(0, cc);
     let ranked = null;
     const res = {
       common, rare, cands, fallback,
       ranked: () => ranked || (ranked = S.rankGuesses(cands, {
-        extraGuesses: lead ? d.words.filter((w) => w[0] === lead) : d.words,
+        extraGuesses: lead ? pool.filter((w) => w[0] === lead) : pool,
       })),
     };
     memo = { key, res };
     return res;
+  }
+
+  /** Dictionary-free mode: known pattern, letters to place, letters possible per position. */
+  function showPattern(c) {
+    showBest(c.fixed.map((l) => l || '_').join(' '), t('noDict'), []);
+    $('useBest').disabled = true;
+    const a = $('alts');
+    const place = Object.entries(c.toPlace).map(([l, n]) => (n > 1 ? `${l}×${n}` : l)).join(', ');
+    const p = document.createElement('p');
+    p.className = 'pattern-note';
+    p.textContent = `${t('toPlace')} ${place || '—'}`;
+    a.appendChild(p);
+    const grid = document.createElement('div');
+    grid.className = 'pattern-grid';
+    c.allowed.forEach((letters, i) => {
+      const row = document.createElement('div');
+      const pos = document.createElement('b');
+      pos.textContent = String(i + 1);
+      const ls = document.createElement('span');
+      ls.textContent = c.fixed[i] ? c.fixed[i] : letters.split('').join(' ');
+      if (c.fixed[i]) ls.className = 'fixed';
+      row.append(pos, ls);
+      grid.appendChild(row);
+    });
+    a.appendChild(grid);
   }
 
   function showBest(word, meta, alts) {

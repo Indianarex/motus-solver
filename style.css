@@ -139,6 +139,12 @@ main {
 }
 .chip:hover { border-color: var(--yellow); }
 .chip.rare { color: var(--muted); font-weight: 500; }
+.pattern-note { margin: 0 0 8px; font-size: 13px; color: var(--text); width: 100%; }
+.pattern-grid { display: flex; flex-direction: column; gap: 3px; width: 100%; font-size: 12px; }
+.pattern-grid div { display: flex; gap: 8px; }
+.pattern-grid b { color: var(--muted); width: 1.5em; text-align: right; flex: none; }
+.pattern-grid span { color: var(--muted); letter-spacing: 1px; word-break: break-all; }
+.pattern-grid span.fixed { color: var(--red); font-weight: 700; font-size: 14px; }
 .cands-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .cands-head h2 span#count { color: var(--yellow); font-size: 16px; }
 .toggle { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; cursor: pointer; white-space: nowrap; }

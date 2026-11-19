@@ -32,7 +32,7 @@ for (const lang of ['fr', 'en']) {
     for (let g = 0; g < N; g++) {
       const answer = common[Math.floor(rnd() * Math.min(cc, 3000))];
       const first = answer[0];
-      const probes = words.filter((w) => w[0] === first);
+      const probes = common.filter((w) => w[0] === first); // same probe pool as the app
       const rows = [];
       let tries = 0;
       while (tries < 15) {
