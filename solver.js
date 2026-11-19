@@ -102,9 +102,10 @@
    */
   function rankGuesses(candidates, opts) {
     opts = opts || {};
-    const POOL = opts.pool || 300;
-    const EXTRA_POOL = opts.extraPool ?? 150;
-    const TARGETS = opts.targets || 2500;
+    // budgets tuned with tools/benchmark.js: larger values cost time without fewer guesses
+    const POOL = opts.pool || 150;
+    const EXTRA_POOL = opts.extraPool ?? 100;
+    const TARGETS = opts.targets || 1000;
     const mode = opts.mode || 'expected';
     if (!candidates.length) return [];
     const L = candidates[0].w.length;

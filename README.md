@@ -15,7 +15,7 @@ The best guess is sometimes a **probe word**: a valid word that cannot be the an
 
 ## How it works
 
-- `data/words-fr.js` / `data/words-en.js`: ~263k French and ~240k English words (4 to 12 letters, accents removed), sorted by usage frequency. Common words are preferred as answers.
+- `data/words-fr.js` / `data/words-en.js`: ~272k French and ~248k English words (4 to 12 letters, accents removed), sorted by usage frequency. About 105k French and 58k English words are marked as common: they are shown by default and preferred as answers; the others appear with the "rare words" option.
 - `solver.js`: exact candidate filtering (repeated letters handled the same way as in the game), then each guess is scored by the **expected number of guesses** it leads to: probability of being the answer + entropy (expected information) of the feedback over the remaining candidates.
 - `app.js` / `style.css` / `index.html`: the user interface (available in French and English).
 
@@ -25,9 +25,9 @@ The best guess is sometimes a **probe word**: a valid word that cannot be the an
 
 | | average guesses | games needing 4+ | thinking time per turn |
 |---|---|---|---|
-| current solver | **2.44** | 97 | 3.9 ms avg, 26 ms worst |
+| current solver | **2.48** | 93 | 4.8 ms avg, 28 ms worst |
 
-61% of games are solved in 2 guesses. The rare long games are unavoidable traps where many words differ by a single letter and no valid word can tell them apart.
+58% of games are solved in 2 guesses. Ranking the whole 10-letter French dictionary (51k candidates, no letter known) takes under 60 ms in a browser. The rare long games are unavoidable traps where many words differ by a single letter and no valid word can tell them apart.
 
 ## Security
 
@@ -45,7 +45,7 @@ Found a security issue? See [SECURITY.md](SECURITY.md).
 ## License
 
 - **Code**: [PolyForm Noncommercial 1.0.0](LICENSE.md). Free to use, modify and share for any noncommercial purpose (personal use, study, research, hobby projects, non-profits…). **Commercial use requires a separate license**: ask in [Discussions](https://github.com/Indianarex/motus-solver/discussions).
-- **Word lists** (`data/`): [CC BY-SA 4.0](data/LICENSE.md), adapted from [an-array-of-french-words](https://github.com/words/an-array-of-french-words) and [an-array-of-english-words](https://github.com/words/an-array-of-english-words) (MIT) and [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0).
+- **Word lists** (`data/`): [CC BY-SA 4.0](data/LICENSE.md), adapted from [an-array-of-french-words](https://github.com/words/an-array-of-french-words) and [an-array-of-english-words](https://github.com/words/an-array-of-english-words) (MIT), [Lexique 3.83](http://www.lexique.org) (CC BY-SA 4.0), [SCOWL](http://wordlist.aspell.net/) (permissive) and [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0).
 - **Fonts** (`fonts/`): Archivo Black and Inter, [SIL Open Font License 1.1](fonts/).
 
 Motus is a trademark of its respective owners; this project is an unofficial fan-made tool and is not affiliated with or endorsed by them.

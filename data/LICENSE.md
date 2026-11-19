@@ -11,6 +11,11 @@ They are an adaptation of the following works, generated with `tools/build-words
 - **an-array-of-french-words** and **an-array-of-english-words** by Zeke Sikelianos,
   MIT License (full notice below).
   https://github.com/words/an-array-of-french-words — https://github.com/words/an-array-of-english-words
+- **Lexique 3.83** by Boris New and Christophe Pallier, licensed under CC BY-SA 4.0
+  (extra French word forms and film/book frequencies). http://www.lexique.org
+- **SCOWL** (Spell Checker Oriented Word Lists) 2020.12.07 by Kevin Atkinson, sizes up to 80,
+  English/American/British/Canadian words without proper nouns (notice below).
+  http://wordlist.aspell.net/
 - **FrequencyWords** by Hermit Dave, content licensed under CC BY-SA 4.0, built from
   the OpenSubtitles 2018 corpus (http://opus.nlpl.eu/OpenSubtitles2018.php).
   https://github.com/hermitdave/FrequencyWords
@@ -19,9 +24,26 @@ They are an adaptation of the following works, generated with `tools/build-words
 
 - Words normalised to upper case A–Z (accents removed, Œ → OE, Æ → AE); words containing
   other characters dropped; only 4 to 12 letter words kept.
-- Words grouped by length and sorted by their frequency in FrequencyWords
-  (`content/2018/{fr,en}/*_50k.txt`); words absent from it are appended alphabetically.
-  Frequency counts themselves are not included.
+- Word lists merged (French: an-array-of-french-words + Lexique; English:
+  an-array-of-english-words + SCOWL).
+- Words grouped by length and sorted by frequency (FrequencyWords `content/2018/{fr,en}/*_full.txt`,
+  plus Lexique film/book frequencies for French). Words used at least ~0.03 times per million are
+  marked as common; the others are appended alphabetically. Frequencies themselves are not included.
+
+## SCOWL notice
+
+Copyright 2000-2018 by Kevin Atkinson
+
+Permission to use, copy, modify, distribute and sell these word lists, the associated
+scripts, the output created from the scripts, and its documentation for any purpose is
+hereby granted without fee, provided that the above copyright notice appears in all copies
+and that both that copyright notice and this permission notice appear in supporting
+documentation. Kevin Atkinson makes no representations about the suitability of this array
+for any purpose. It is provided "as is" without express or implied warranty.
+
+SCOWL also includes material from other authors (12Dicts by Alan Beale, ENABLE, Moby Words II
+and others); their notices are in the `Copyright` file of the SCOWL distribution:
+http://wordlist.aspell.net/scowl-readme/
 
 ## MIT notice for an-array-of-french-words / an-array-of-english-words
 
